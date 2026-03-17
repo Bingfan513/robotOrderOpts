@@ -36,22 +36,50 @@
 
 ```
 robotOrderOpts/
-├── go.mod                 # Go module 定义
-├── order.go              # 订单数据结构
-├── order_queue.go        # 优先队列实现
-├── robot.go              # 机器人处理逻辑
-├── order_system.go       # 系统协调器
-├── main.go               # 演示程序
-├── main_test.go          # 单元测试
-└── README.md             # 本文档
+├── .github/
+│   └── workflows/        # GitHub Actions 工作流程
+│       └── ci.yml        # CI/CD 配置
+├── script/               # 自动化脚本
+│   ├── test.sh          # 运行单元测试
+│   ├── build.sh         # 编译 CLI 应用
+│   └── run.sh           # 运行 CLI 应用
+├── go.mod               # Go module 定义
+├── order.go             # 订单数据结构
+├── order_queue.go       # 优先队列实现
+├── robot.go             # 机器人处理逻辑
+├── order_system.go      # 系统协调器
+├── output.go            # 输出管理器
+├── cli.go               # 交互式 CLI（开发中）
+├── cmd.go               # 命令行参数处理
+├── main.go              # 主程序
+├── main_test.go         # 单元测试
+├── result.txt           # 应用输出结果（生成）
+└── README.md            # 本文档
 ```
 
 ## 🚀 快速开始
 
 ### 前置要求
 - Go 1.21 或更高版本
+- Bash shell
 
-### 编译运行
+### 方式 1：使用脚本（推荐用于 GitHub Actions）
+
+```bash
+# 运行单元测试
+bash script/test.sh
+
+# 编译应用
+bash script/build.sh
+
+# 运行应用（输出到 result.txt）
+bash script/run.sh
+
+# 查看结果
+cat result.txt
+```
+
+### 方式 2：直接运行
 
 ```bash
 # 进入项目目录
@@ -60,13 +88,22 @@ cd robotOrderOpts
 # 运行演示程序
 go run .
 
-# 或运行测试
-go test -v
+# 或编译然后运行
+go build -o robot-order-system
+./robot-order-system
 
-# 编译成可执行文件
-go build -o robot-system
-./robot-system
+# 运行测试
+go test -v
 ```
+
+### 输出示例
+
+```
+[15:04:05] ✅ 订单完成: #1 [VIP] (耗时: 10.0s, 机器人: 1)
+[15:04:15] ✅ 订单完成: #2 [REGULAR] (耗时: 10.0s, 机器人: 2)
+```
+
+**时间戳格式**: `[HH:MM:SS]` - 用于追踪事件顺序
 
 ## 📊 演示场景
 
@@ -93,6 +130,42 @@ go build -o robot-system
 运行测试：
 ```bash
 go test -v
+# 或通过脚本
+bash script/test.sh
+```
+
+## 🔄 GitHub Actions CI/CD
+
+每次推送和拉取请求都会自动运行以下检查：
+
+### 工作流程
+1. **测试** - 在 Go 1.21 和 1.22 上运行单元测试
+2. **构建** - 编译 CLI 应用程序
+3. **运行** - 执行应用并验证输出
+4. **质量检查** - 代码格式和 linting
+
+### 查看状态
+访问仓库的 **Actions** 标签查看工作流程运行状态。
+
+### 输出工件
+- `test-results-go-{version}` - 测试结果
+- `robot-order-system-executable` - 编译的可执行文件
+- `application-results` - result.txt 输出
+
+详见 [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md)
+
+## 📝 结果文件
+
+应用执行后生成 `result.txt` 文件，包含：
+- 所有系统事件的时间戳记录
+- 订单完成情况（完成时间、耗时、处理机器人）
+- 系统状态快照
+
+示例：
+```
+[15:04:05] ✨ 系统初始化完成，2个机器人已就位
+[15:04:15] ✅ 订单完成: #1 [VIP] (耗时: 10.0s, 机器人: 1)
+[15:04:25] ✅ 订单完成: #2 [REGULAR] (耗时: 10.0s, 机器人: 2)
 ```
 
 ## 📈 使用示例
@@ -197,12 +270,21 @@ const ProcessTime = 10 * time.Second  // 每个订单处理时间
 4. **订单类别**: 支持更多订单优先级
 5. **错误处理**: 添加超时和重试机制
 6. **性能指标**: 收集处理时间、吞吐量等统计
+7. **交互式 CLI**: 实时命令行界面（开发中，见 [INTERACTIVE_CLI.md](INTERACTIVE_CLI.md)）
+
+## 📚 文档
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) - 贡献指南
+- [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md) - GitHub Actions 工作流程
+- [INTERACTIVE_CLI.md](INTERACTIVE_CLI.md) - 交互式 CLI 功能（开发中）
+- [QUICK_START.go](QUICK_START.go) - 快速参考
 
 ## 📚 参考文献
 
 - [Go Concurrency](https://go.dev/blog/pipelines)
 - [Go Sync Package](https://pkg.go.dev/sync)
 - [Go Channels](https://go.dev/tour/concurrency/2)
+- [GitHub Actions](https://docs.github.com/en/actions)
 
 ## 📄 许可证
 
