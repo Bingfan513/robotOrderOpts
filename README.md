@@ -9,8 +9,9 @@
 ### 1. **订单管理** (`order.go`)
 - `Order`: 表示一个订单
   - 支持两种类型：`REGULAR`(普通) 和 `VIP`(会员)
-  - 状态流转：`PENDING` → `COMPLETED`
-  - 记录创建时间和完成时间
+  - 状态流转：`PENDING` → `PROCESSING` → `COMPLETED`
+  - 每个订单有唯一的自增 ID（int64）
+  - 记录创建时间、完成时间和处理它的机器人 ID
 
 ### 2. **优先队列** (`order_queue.go`)
 - `OrderQueue`: 智能队列管理
@@ -105,10 +106,10 @@ defer system.Shutdown()
 ### 下单
 ```go
 // 普通订单
-system.PlaceOrder("ORDER-001", false)
+system.PlaceOrder(false)
 
 // VIP 订单
-system.PlaceOrder("VIP-ORDER-001", true)
+system.PlaceOrder(true)
 ```
 
 ### 管理机器人
@@ -153,8 +154,12 @@ VIP 订单优先级 > 普通订单优先级
 | `NewOrderSystem` | `initialRobots int` | `*OrderSystem` | 创建新系统 |
 | `AddRobot` | 无 | 无 | 增加一个机器人 |
 | `RemoveRobot` | `robotID int` | `bool` | 移除指定机器人 |
-| `PlaceOrder` | `orderID string, isVIP bool` | 无 | 创建新订单 |
+| `PlaceOrder` | `isVIP bool` | `*Order` | 创建新订单 |
 | `GetStats` | 无 | `(robots, vipPending, regularPending, completed int)` | 获取系统统计 |
+| `GetPendingOrders` | 无 | `[]*Order` | 获取所有待处理订单 |
+| `GetProcessingOrders` | 无 | `[]*Order` | 获取所有处理中订单 |
+| `GetCompletedOrders` | 无 | `[]*Order` | 获取所有完成订单 |
+| `GetState` | 无 | `*SystemState` | 获取完整系统状态 |
 | `PrintStats` | 无 | 无 | 打印统计信息 |
 | `Shutdown` | 无 | 无 | 关闭系统 |
 
@@ -167,22 +172,19 @@ const ProcessTime = 10 * time.Second  // 每个订单处理时间
 
 ## 🔍 输出说明
 
-### 订单处理流程
-```
-📦 收到VIP订单: VIP-ORDER-001
-🤖 机器人 1 开始处理订单 VIP-ORDER-001 (类型: VIP)...
-✅ 机器人 1 完成订单 VIP-ORDER-001
-```
-
 ### 系统状态
 ```
-==================================================
+============================================================
 📊 系统状态:
    🤖 活跃机器人数: 2
-   ⏳ VIP待处理订单: 1
-   ⏳ 普通待处理订单: 2
+   ⏳ 待处理订单: 2
+   🔄 处理中订单: 1
    ✅ 已完成订单: 3
-==================================================
+
+   机器人状态:
+     机器人 1: 处理订单 #3
+     机器人 2: 闲置
+============================================================
 ```
 
 ## 🛠️ 扩展功能
