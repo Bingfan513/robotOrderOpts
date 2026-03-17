@@ -8,15 +8,16 @@ import (
 )
 
 type OrderSystem struct {
-	queue            *OrderQueue
-	robots           map[int]*Robot
-	results          chan *Order
-	stopChan         chan bool
-	mu               sync.RWMutex
-	robotID          int
-	completed        []*Order
-	onStateChanged   func()
-	lastRobotID      int
+	queue              *OrderQueue
+	robots             map[int]*Robot
+	results            chan *Order
+	stopChan           chan bool
+	mu                 sync.RWMutex
+	robotID            int
+	completed          []*Order
+	onStateChanged     func()
+	lastRobotID        int
+	onOrderCompleted   func(*Order)
 }
 
 type SystemState struct {
@@ -62,6 +63,12 @@ func (s *OrderSystem) SetStateChangeCallback(callback func()) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.onStateChanged = callback
+}
+
+func (s *OrderSystem) SetOrderCompletedCallback(callback func(*Order)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.onOrderCompleted = callback
 }
 
 func (s *OrderSystem) notifyStateChanged() {
@@ -218,7 +225,12 @@ func (s *OrderSystem) collectResults() {
 	for order := range s.results {
 		s.mu.Lock()
 		s.completed = append(s.completed, order)
+		callback := s.onOrderCompleted
 		s.mu.Unlock()
+		
+		if callback != nil {
+			callback(order)
+		}
 	}
 }
 

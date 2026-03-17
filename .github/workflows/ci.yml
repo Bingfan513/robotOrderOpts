@@ -1,0 +1,135 @@
+name: Robot Order System CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      
+      - name: Run tests
+        run: bash script/test.sh
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-go-${{ matrix.go-version }}
+          path: result.txt
+
+  build:
+    name: Build CLI
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Build application
+        run: bash script/build.sh
+      
+      - name: Verify executable
+        run: |
+          if [ -f robot-order-system ]; then
+            echo "✅ Build successful"
+            ./robot-order-system --version 2>/dev/null || echo "ℹ️ No version flag"
+          else
+            echo "❌ Build failed"
+            exit 1
+          fi
+      
+      - name: Upload executable
+        uses: actions/upload-artifact@v3
+        with:
+          name: robot-order-system-executable
+          path: robot-order-system
+
+  run:
+    name: Run CLI Application
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Run application
+        run: bash script/run.sh
+      
+      - name: Display results
+        run: |
+          echo "╔════════════════════════════════════════╗"
+          echo "║          Application Results           ║"
+          echo "╚════════════════════════════════════════╝"
+          cat result.txt
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: application-results
+          path: result.txt
+      
+      - name: Verify timestamp format
+        run: |
+          if grep -q '\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\]' result.txt; then
+            echo "✅ Timestamp format verified (HH:MM:SS)"
+          else
+            echo "⚠️ Timestamp format not found in expected format"
+          fi
+
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+        continue-on-error: true
+      
+      - name: Check code formatting
+        run: |
+          if ! go fmt ./...; then
+            echo "⚠️ Code formatting issues found"
+          fi
+      
+      - name: Run vet
+        run: go vet ./...
+        continue-on-error: true

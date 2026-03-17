@@ -1,0 +1,32 @@
+# Binaries
+robot-order-system
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output files
+result.txt
+*.out
+
+# Dependency directories
+/vendor/
+go.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build directories
+/bin/
+/dist/
