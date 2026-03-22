@@ -38,10 +38,10 @@ func TestOrderSystem(t *testing.T) {
 	system.PlaceOrder(false)
 	system.PlaceOrder(true)
 
-	// 等待处理
-	time.Sleep(2 * time.Second)
+	// 等待处理 (至少需要10秒来处理一个订单)
+	time.Sleep(12 * time.Second)
 
-	robots, vipPending, regularPending, completed := system.GetStats()
+	robots, _, _, completed := system.GetStats()
 
 	if robots != 1 {
 		t.Errorf("期望1个机器人，实际: %d", robots)
