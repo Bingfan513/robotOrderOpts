@@ -297,3 +297,5 @@ MIT License
 ---
 
 **最后更新**: 2026-03-17
+
+## 需求链接地址：https://github.com/feedmepos/se-take-home-assignment/
