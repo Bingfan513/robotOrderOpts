@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 )
 
 type OrderSystem struct {
@@ -200,7 +199,7 @@ func (s *OrderSystem) GetStatsJSON() ([]byte, error) {
 
 func (s *OrderSystem) PrintStats() {
 	state := s.GetState()
-	fmt.Println("\n" + "="*60)
+	fmt.Println("\n" + repeatString("=", 60))
 	fmt.Println("📊 系统状态:")
 	fmt.Printf("   🤖 活跃机器人数: %d\n", len(state.Robots))
 	fmt.Printf("   ⏳ 待处理订单: %d\n", len(state.Pending))
@@ -218,7 +217,15 @@ func (s *OrderSystem) PrintStats() {
 		}
 	}
 
-	fmt.Println("="*60 + "\n")
+	fmt.Println(repeatString("=", 60) + "\n")
+}
+
+func repeatString(s string, count int) string {
+	result := ""
+	for i := 0; i < count; i++ {
+		result += s
+	}
+	return result
 }
 
 func (s *OrderSystem) collectResults() {
